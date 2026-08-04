@@ -69,6 +69,10 @@ alter table public.subscription_codes   enable row level security;
 
 -- TODO: decide access model. Default = only authenticated (service/admin) can manage.
 -- Recommended: create an admin user in Supabase Auth and grant only to it.
+drop policy if exists "admin owns stores"              on public.stores;
+drop policy if exists "admin owns subscriptions"       on public.subscriptions;
+drop policy if exists "admin owns subscription_codes"  on public.subscription_codes;
+
 create policy "admin owns stores"              on public.stores              for all to authenticated using (true) with check (true);
 create policy "admin owns subscriptions"       on public.subscriptions       for all to authenticated using (true) with check (true);
 create policy "admin owns subscription_codes"  on public.subscription_codes  for all to authenticated using (true) with check (true);
