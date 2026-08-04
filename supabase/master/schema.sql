@@ -76,3 +76,21 @@ drop policy if exists "admin owns subscription_codes"  on public.subscription_co
 create policy "admin owns stores"              on public.stores              for all to authenticated using (true) with check (true);
 create policy "admin owns subscriptions"       on public.subscriptions       for all to authenticated using (true) with check (true);
 create policy "admin owns subscription_codes"  on public.subscription_codes  for all to authenticated using (true) with check (true);
+
+-- ============================================================
+-- SAFE PUBLIC READER for stores.
+-- The storefront (anon role) needs to know ONLY its own status
+-- to auto-suspend itself. This function is SECURITY DEFINER so it
+-- bypasses RLS, but returns a single row (the requested store) and
+-- no secrets (no anon_key / write_token / owner data).
+-- ============================================================
+create or replace function public.get_store_status(p_store text)
+returns table (status text, suspended boolean)
+language sql security definer set search_path = public as $$
+  select s.status,
+         (s.status = 'suspended') as suspended
+  from public.stores s
+  where s.store_id = p_store;
+$$;
+revoke all on function public.get_store_status(text) from public;
+grant execute on function public.get_store_status(text) to anon, authenticated;
