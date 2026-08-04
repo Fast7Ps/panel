@@ -299,6 +299,18 @@
     } catch (e) { toast('الكود: ' + s.admin_code, false); }
   }
 
+  // Generate a secure random admin code and fill the store form field.
+  function generateAdminCode() {
+    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+    var len = 10;
+    var code = '';
+    var buf = new Uint32Array(len);
+    try { (window.crypto || window.msCrypto).getRandomValues(buf); } catch (e) { for (var i = 0; i < len; i++) buf[i] = Math.floor(Math.random() * 4294967296); }
+    for (var i = 0; i < len; i++) code += chars.charAt(buf[i] % chars.length);
+    $('sAdminCode').value = code;
+    toast('تم توليد كود عشوائي آمن', false);
+  }
+
   // ---------- code CRUD ----------
   function openCodeModal() {
     $('cCode').value = '';
@@ -378,6 +390,7 @@
   global.toggleStoreStatus = toggleStoreStatus;
   global.removeStore = removeStore;
   global.copyAdminCode = copyAdminCode;
+  global.generateAdminCode = generateAdminCode;
   global.openCodeModal = openCodeModal;
   global.closeCodeModal = closeCodeModal;
   global.saveCode = saveCode;
