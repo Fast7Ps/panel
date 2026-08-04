@@ -22,11 +22,17 @@ create table if not exists public.stores (
   supabase_url text,
   anon_key text,
   write_token text,
+  -- optional per-store admin panel access code (kept server-side only;
+  -- the storefront verifies against it via verify_store_admin, never sees it)
+  admin_code text,
   status text not null default 'active',    -- active | suspended | pending
   notes text,
   created_at timestamptz not null default now()
 );
 create index if not exists idx_stores_status on public.stores(status);
+
+-- Add the column also to existing installations (safe to re-run)
+alter table public.stores add column if not exists admin_code text;
 
 -- ---------- SUBSCRIPTIONS ----------
 -- Billing/plan history per store. Latest row = current plan.
@@ -94,3 +100,26 @@ language sql security definer set search_path = public as $$
 $$;
 revoke all on function public.get_store_status(text) from public;
 grant execute on function public.get_store_status(text) to anon, authenticated;
+
+-- ============================================================
+-- SAFE ADMIN CODE CHECK.
+-- The storefront NEVER sees the admin code. When a store owner
+-- submits a code, the front-end calls this function which returns
+-- ONLY a boolean (true/false). SECURITY DEFINER bypasses RLS, but:
+--   * takes the code as a parameter (never returns it),
+--   * matches against the per-store admin_code column.
+-- Setting admin_code is OWNER/COMPANY only (RLS blocks public writes).
+-- NOTE: After ALTERing the stores table, re-run this whole script.
+-- ============================================================
+create or replace function public.verify_store_admin(p_store text, p_code text)
+returns boolean
+language sql security definer set search_path = public as $$
+  select coalesce(
+    (select (s.admin_code is not null and s.admin_code = p_code)
+       from public.stores s
+      where s.store_id = p_store),
+    false
+  );
+$$;
+revoke all on function public.verify_store_admin(text, text) from public;
+grant execute on function public.verify_store_admin(text, text) to anon, authenticated;

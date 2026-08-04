@@ -243,6 +243,12 @@
       </div>
 
       <div class="field">
+        <label style="color:var(--amber)">كود لوحة التحكم للمتجر (اختياري — محفوظ عند الشركة فقط)</label>
+        <input id="sAdminCode" placeholder="اتركه فارغاً لتعطيل الدخول المخصص" dir="ltr" style="text-align:left">
+        <div class="hint">كود خاص يفتح لوحة إدارة هذا المتجر. الكود لا يظهر في سكربتات المتجر؛ يُتحقق منه عبر خادم الشركة. اتركه فارغاً ليبقى سلوك المتجر كما هو.</div>
+      </div>
+
+      <div class="field">
         <label style="color:var(--amber)">بيانات Supabase الخاص بهذا المتجر (معزول تماماً)</label>
         <div class="hint" style="margin-bottom:10px">أدخل بيانات مشروع Supabase المستقل لهذا المتجر — لا تختلط بياناته مع أي متجر آخر.</div>
         <input id="sSupabaseUrl" placeholder="https://xxxx.supabase.co" dir="ltr" style="text-align:left;margin-bottom:8px">

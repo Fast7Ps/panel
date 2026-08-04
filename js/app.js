@@ -140,6 +140,7 @@
         '<td class="muted">' + (sub && sub.end_date ? esc(sub.end_date) : '—') + '</td>' +
         '<td>' + esc(s.owner_name || (s.owner_phone ? '📞 ' + s.owner_phone : '—')) + '</td>' +
         '<td><div class="row">' +
+        (s.admin_code ? '<button class="btn btn-ghost btn-sm" onclick="copyAdminCode(\'' + esc(s.store_id) + '\')" title="نسخ كود لوحة التحكم">🔑</button>' : '') +
         '<button class="btn btn-ghost btn-sm" onclick="toggleStoreStatus(\'' + esc(s.store_id) + '\')">' + (s.status === 'suspended' ? 'تفعيل' : 'إيقاف') + '</button>' +
         '<button class="btn btn-ghost btn-sm" onclick="editStore(\'' + esc(s.store_id) + '\')">تعديل</button>' +
         '<button class="btn btn-danger btn-sm" onclick="removeStore(\'' + esc(s.store_id) + '\')">حذف</button>' +
@@ -193,7 +194,7 @@
   function openStoreModal() {
     editingStoreId = null;
     $('storeModalTitle').textContent = 'إضافة متجر جديد';
-    ['sName', 'sSlug', 'sOwnerName', 'sOwnerPhone', 'sOwnerEmail', 'sSupabaseUrl', 'sAnonKey', 'sWriteToken'].forEach(function (id) { $(id).value = ''; });
+    ['sName', 'sSlug', 'sOwnerName', 'sOwnerPhone', 'sOwnerEmail', 'sSupabaseUrl', 'sAnonKey', 'sWriteToken', 'sAdminCode'].forEach(function (id) { $(id).value = ''; });
     $('sStatus').value = 'pending';
     $('storeModal').classList.add('show');
   }
@@ -210,6 +211,7 @@
     $('sOwnerName').value = s.owner_name || '';
     $('sOwnerPhone').value = s.owner_phone || '';
     $('sOwnerEmail').value = s.owner_email || '';
+    $('sAdminCode').value = s.admin_code || '';
     $('sSupabaseUrl').value = s.supabase_url || '';
     $('sAnonKey').value = s.anon_key || '';
     $('sWriteToken').value = s.write_token || '';
@@ -231,6 +233,7 @@
       supabase_url: $('sSupabaseUrl').value.trim(),
       anon_key: $('sAnonKey').value.trim(),
       write_token: $('sWriteToken').value.trim(),
+      admin_code: $('sAdminCode').value.trim() || null,
       status: $('sStatus').value
     };
 
@@ -285,6 +288,15 @@
       await loadAll();
       toast('تم حذف المتجر');
     } catch (e) { toast('فشل الحذف: ' + e.message, true); }
+  }
+
+  function copyAdminCode(id) {
+    const s = stores.find(function (x) { return x.store_id === id; });
+    if (!s || !s.admin_code) return;
+    try {
+      navigator.clipboard.writeText(s.admin_code);
+      toast('تم نسخ كود لوحة التحكم للمتجر: ' + s.name, false);
+    } catch (e) { toast('الكود: ' + s.admin_code, false); }
   }
 
   // ---------- code CRUD ----------
@@ -353,6 +365,7 @@
   global.saveStore = saveStore;
   global.toggleStoreStatus = toggleStoreStatus;
   global.removeStore = removeStore;
+  global.copyAdminCode = copyAdminCode;
   global.openCodeModal = openCodeModal;
   global.closeCodeModal = closeCodeModal;
   global.saveCode = saveCode;
