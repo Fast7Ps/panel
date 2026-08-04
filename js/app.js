@@ -346,14 +346,26 @@
   }
 
   // ---------- boot ----------
-  function boot() {
+  async function boot() {
     $('loginPass').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
-    // Restore an existing session if a stored token was set by previous login
+    // Restore an existing session if a stored token was set by previous login,
+    // but only if that token is still valid (not expired).
     if (isLoggedIn() && auth && auth.hasToken()) {
-      $('loginScreen').style.display = 'none';
-      $('app').style.display = 'block';
-      initPanel();
+      try {
+        await loadAll();
+        $('loginScreen').style.display = 'none';
+        $('app').style.display = 'block';
+        initPanel();
+      } catch (e) {
+        // Token expired or rejected -> force a fresh login.
+        localStorage.setItem(LOGIN_KEY, 'false');
+        if (auth) auth.signOut();
+        $('loginScreen').style.display = 'grid';
+        $('app').style.display = 'none';
+      }
+      return;
     }
+    if (isLoggedIn()) { localStorage.setItem(LOGIN_KEY, 'false'); }
   }
 
   global.doLogin = doLogin;
