@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة تحكم FAST7 — إدارة المتاجر</title>
+  <style>
+    :root {
+      --bg: #0f172a; --card: #1e293b; --border: #334155;
+      --text: #f1f5f9; --muted: #94a3b8;
+      --accent: #6366f1; --accent-hover: #4f46e5;
+      --green: #10b981; --red: #ef4444; --amber: #f59e0b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+      background: var(--bg); color: var(--text); font-size: 14px;
+    }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; padding: 16px 20px; background: var(--card);
+      border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 20;
+    }
+    header h1 { font-size: 1.05rem; margin: 0; }
+    header .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; }
+    header .brand .logo {
+      width: 34px; height: 34px; border-radius: 10px; display: grid;
+      place-items: center; background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      font-weight: 900; font-size: .95rem; color: #fff;
+    }
+    .btn {
+      border: none; border-radius: 10px; padding: 9px 16px; cursor: pointer;
+      font-weight: 700; font-family: inherit; font-size: .85rem; transition: .15s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-green { background: var(--green); color: #fff; }
+    .btn-danger { background: rgba(239,68,68,.15); color: var(--red); border: 1px solid rgba(239,68,68,.35); }
+    .btn-ghost { background: rgba(148,163,184,.12); color: var(--text); }
+    .btn-sm { padding: 6px 11px; font-size: .75rem; border-radius: 8px; }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 18px; margin-bottom: 16px;
+    }
+    .grid { display: grid; gap: 14px; }
+    .grid-3 { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+    .field { margin-bottom: 12px; }
+    .field label { display: block; font-size: .78rem; color: var(--muted); margin-bottom: 5px; font-weight: 600; }
+    .field input, .field select, .field textarea {
+      width: 100%; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--bg); color: var(--text); font-family: inherit; font-size: .85rem;
+    }
+    .field input:focus, .field select:focus { outline: 2px solid var(--accent); }
+    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .muted { color: var(--muted); }
+    .badge {
+      display: inline-block; padding: 3px 10px; border-radius: 999px;
+      font-size: .7rem; font-weight: 800;
+    }
+    .badge-green { background: rgba(16,185,129,.15); color: var(--green); }
+    .badge-red { background: rgba(239,68,68,.15); color: var(--red); }
+    .badge-amber { background: rgba(245,158,11,.15); color: var(--amber); }
+    .badge-blue { background: rgba(99,102,241,.15); color: #a5b4fc; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: right; padding: 10px 8px; border-bottom: 1px solid var(--border); font-size: .82rem; }
+    th { color: var(--muted); font-size: .72rem; text-transform: uppercase; }
+    tr:hover td { background: rgba(148,163,184,.05); }
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(2,6,23,.7); backdrop-filter: blur(4px);
+      display: none; place-items: center; z-index: 100; padding: 20px;
+    }
+    .modal-backdrop.show { display: grid; }
+    .modal { background: var(--card); border: 1px solid var(--border); border-radius: 18px; max-width: 520px; width: 100%; padding: 22px; max-height: 90vh; overflow-y: auto; }
+    .modal h3 { margin: 0 0 14px; font-size: 1rem; }
+    .modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1.1rem; }
+    .toast {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(120%);
+      background: var(--card); border: 1px solid var(--border); color: var(--text);
+      padding: 12px 22px; border-radius: 12px; font-weight: 700; transition: .25s; z-index: 300;
+      box-shadow: 0 8px 30px rgba(0,0,0,.4);
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.err { border-color: var(--red); color: #fca5a5; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 18px; }
+    .stat { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+    .stat .num { font-size: 1.5rem; font-weight: 900; margin-top: 4px; }
+    .empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+    .login-screen {
+      min-height: 100vh; display: grid; place-items: center; padding: 20px;
+    }
+    .login-box { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 32px; width: 100%; max-width: 360px; text-align: center; }
+    .login-box .logo { width: 64px; height: 64px; margin: 0 auto 14px; }
+    code { background: rgba(148,163,184,.15); padding: 2px 6px; border-radius: 6px; font-size: .8em; direction: ltr; display: inline-block; }
+    .copy-btn { background: none; border: 1px solid var(--border); color: var(--muted); cursor: pointer; border-radius: 6px; padding: 2px 8px; font-size: .7rem; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .tab {
+      padding: 8px 16px; border-radius: 999px; background: var(--card);
+      border: 1px solid var(--border); color: var(--muted); cursor: pointer; font-weight: 700; font-size: .82rem;
+    }
+    .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .hint { font-size: .72rem; color: var(--muted); margin-top: 4px; }
+  </style>
+</head>
+<body>
+
+  <div id="loginScreen" class="login-screen">
+    <div class="login-box">
+      <div class="logo" style="background:linear-gradient(135deg,var(--accent),#8b5cf6);border-radius:16px;display:grid;place-items:center;font-size:1.6rem;font-weight:900;color:#fff">F7</div>
+      <h2 style="margin:0 0 4px;font-size:1.1rem">لوحة تحكم FAST7</h2>
+      <p class="muted" style="margin:0 0 20px;font-size:.82rem">إدارة المتاجر المشتركة والاشتراكات</p>
+      <div class="field">
+        <input type="email" id="loginEmail" placeholder="بريد المشرف (Supabase Auth)" autocomplete="username" style="text-align:center">
+      </div>
+      <div class="field">
+        <input type="password" id="loginPass" placeholder="كلمة المرور" autocomplete="current-password" style="text-align:center">
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="doLogin()">دخول</button>
+    </div>
+  </div>
+
+  <div id="app" style="display:none">
+    <header>
+      <div class="brand">
+        <span class="logo">F7</span>
+        <h1>لوحة تحكم FAST7</h1>
+      </div>
+      <div class="row">
+        <span class="muted" style="font-size:.78rem" id="syncStatus">...</span>
+        <button class="btn btn-ghost btn-sm" onclick="logout()">خروج</button>
+      </div>
+    </header>
+
+    <div class="wrap">
+      <div class="tabs">
+        <button class="tab active" data-tab="stores" onclick="switchTab('stores')">المتاجر</button>
+        <button class="tab" data-tab="codes" onclick="switchTab('codes')">أكواد الاشتراك</button>
+        <button class="tab" data-tab="subs" onclick="switchTab('subs')">الاشتراكات</button>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats" id="statsBar"></div>
+
+      <!-- STORES PANEL -->
+      <div class="tab-panel active" id="tab-stores">
+        <div class="row" style="justify-content:space-between;margin-bottom:14px">
+          <h2 style="margin:0;font-size:1rem">المتاجر المشتركة</h2>
+          <button class="btn btn-primary" onclick="openStoreModal()">+ إضافة متجر</button>
+        </div>
+        <div class="card" style="padding:8px">
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>المتجر</th><th>المسار</th><th>الحالة</th><th>الخطة</th>
+                  <th>الإنتهاء</th><th>المالك</th><th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="storesBody">
+                <tr><td colspan="7" class="empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- CODES PANEL -->
+      <div class="tab-panel" id="tab-codes">
+        <div class="row" style="justify-content:space-between;margin-bottom:14px">
+          <h2 style="margin:0;font-size:1rem">أكواد الاشتراك والدفع</h2>
+          <button class="btn btn-primary" onclick="openCodeModal()">+ إصدار كود</button>
+        </div>
+        <div class="card" style="padding:8px">
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>الكود</th><th>النوع</th><th>الخطة</th><th>المبلغ</th>
+                  <th>المتجر</th><th>الحالة</th><th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="codesBody">
+                <tr><td colspan="7" class="empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBSCRIPTIONS PANEL -->
+      <div class="tab-panel" id="tab-subs">
+        <h2 style="margin:0 0 14px;font-size:1rem">كل الاشتراكات</h2>
+        <div class="card" style="padding:8px">
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>المتجر</th><th>الخطة</th><th>الحالة</th><th>المبلغ</th>
+                  <th>البداية</th><th>النهاية</th><th>الدفع</th>
+                </tr>
+              </thead>
+              <tbody id="subsBody">
+                <tr><td colspan="7" class="empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STORE MODAL -->
+  <div class="modal-backdrop" id="storeModal">
+    <div class="modal">
+      <div class="row" style="justify-content:space-between">
+        <h3 id="storeModalTitle">إضافة متجر جديد</h3>
+        <button class="modal-close" onclick="closeStoreModal()">✕</button>
+      </div>
+      <div class="field">
+        <label>اسم المتجر *</label>
+        <input id="sName" placeholder="مثال: متجر العطور">
+      </div>
+      <div class="field">
+        <label>المسار (slug) — يُنشر على /<code>&lt;slug&gt;</code>/index.html *</label>
+        <input id="sSlug" placeholder="مثال: perfumes" dir="ltr" style="text-align:left">
+        <div class="hint">فريد لكل متجر. يُستخدم في رابط المتجر واستخراج store_id.</div>
+      </div>
+      <div class="row" style="gap:10px">
+        <div class="field" style="flex:1">
+          <label>اسم المالك</label>
+          <input id="sOwnerName" placeholder="اسم صاحب المتجر">
+        </div>
+        <div class="field" style="flex:1">
+          <label>هاتف المالك</label>
+          <input id="sOwnerPhone" placeholder="رقم الهاتف">
+        </div>
+      </div>
+      <div class="field">
+        <label>بريد المالك</label>
+        <input id="sOwnerEmail" placeholder="example@email.com" dir="ltr" style="text-align:left">
+      </div>
+
+      <div class="field">
+        <label style="color:var(--amber)">بيانات Supabase الخاص بهذا المتجر (معزول تماماً)</label>
+        <div class="hint" style="margin-bottom:10px">أدخل بيانات مشروع Supabase المستقل لهذا المتجر — لا تختلط بياناته مع أي متجر آخر.</div>
+        <input id="sSupabaseUrl" placeholder="https://xxxx.supabase.co" dir="ltr" style="text-align:left;margin-bottom:8px">
+        <input id="sAnonKey" placeholder="anon key" dir="ltr" style="text-align:left;margin-bottom:8px">
+        <input id="sWriteToken" placeholder="write token (رمز الكتابة)" dir="ltr" style="text-align:left">
+      </div>
+
+      <div class="field">
+        <label>الحالة</label>
+        <select id="sStatus">
+          <option value="active">نشط</option>
+          <option value="pending">قيد الإعداد</option>
+          <option value="suspended">موقوف</option>
+        </select>
+      </div>
+
+      <div class="row" style="justify-content:flex-end;margin-top:8px">
+        <button class="btn btn-ghost" onclick="closeStoreModal()">إلغاء</button>
+        <button class="btn btn-primary" onclick="saveStore()">حفظ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CODE MODAL -->
+  <div class="modal-backdrop" id="codeModal">
+    <div class="modal">
+      <div class="row" style="justify-content:space-between">
+        <h3>إصدار كود اشتراك / دفع</h3>
+        <button class="modal-close" onclick="closeCodeModal()">✕</button>
+      </div>
+      <div class="field">
+        <label>الكود *</label>
+        <input id="cCode" placeholder="مثال: F7-2026-A1B2C3" dir="ltr" style="text-align:left">
+        <div class="hint">اتركه فارغاً لتوليد كود تلقائياً.</div>
+      </div>
+      <div class="row" style="gap:10px">
+        <div class="field" style="flex:1">
+          <label>النوع</label>
+          <select id="cType">
+            <option value="subscription">تفعيل اشتراك</option>
+            <option value="fee">دفع رسوم</option>
+            <option value="credit">رصيد</option>
+          </select>
+        </div>
+        <div class="field" style="flex:1">
+          <label>الخطة</label>
+          <select id="cPlan">
+            <option value="free">مجانية</option>
+            <option value="monthly">شهرية</option>
+            <option value="annual">سنوية VIP</option>
+          </select>
+        </div>
+      </div>
+      <div class="row" style="gap:10px">
+        <div class="field" style="flex:1">
+          <label>المبلغ</label>
+          <input id="cAmount" type="number" placeholder="0">
+        </div>
+        <div class="field" style="flex:1">
+          <label>للمتجر</label>
+          <select id="cStore"></select>
+        </div>
+      </div>
+      <div class="row" style="justify-content:flex-end;margin-top:8px">
+        <button class="btn btn-ghost" onclick="closeCodeModal()">إلغاء</button>
+        <button class="btn btn-primary" onclick="saveCode()">إصدار</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
