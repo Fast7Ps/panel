@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة تحكم FAST7 — إدارة المتاجر</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Cairo:wght@300;400;500;600;700;800;900&display=swap');
+
+    :root {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --muted: #64748b;
+      --accent: #ef4444;
+      --accent-soft: rgba(239, 68, 68, 0.1);
+      --accent-hover: #dc2626;
+      --sidebar-bg: #1e293b;
+      --sidebar-text: #cbd5e1;
+      --green: #10b981;
+      --green-soft: #d1fae5;
+      --green-text: #065f46;
+      --red: #ef4444;
+      --red-soft: #fee2e2;
+      --red-text: #991b1b;
+      --amber: #f59e0b;
+      --amber-soft: #fef3c7;
+      --amber-text: #92400e;
+      --sidebar-w: 240px;
+      --radius: 14px;
+      --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+      --shadow-hover: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --transition: all 0.2s ease;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Tajawal', 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+      letter-spacing: -0.01em;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* ===== LOGIN ===== */
+    .login-screen {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: radial-gradient(circle at 10% 20%, rgba(224, 231, 255, 0.4) 0%, #f1f5f9 90%);
+    }
+    .login-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px 32px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.05), 0 8px 10px -6px rgb(0 0 0 / 0.05);
+    }
+    .login-box .logo {
+      width: 64px; height: 64px; margin: 0 auto 20px;
+      border-radius: 18px;
+      background: var(--accent);
+      color: #fff; font-weight: 800; font-size: 1.7rem;
+      display: grid; place-items: center;
+      box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.3);
+    }
+    .login-box h2 { margin: 0 0 8px; font-size: 1.3rem; font-weight: 800; }
+    .login-box p { margin: 0 0 28px; font-size: .85rem; }
+
+    /* ===== LAYOUT ===== */
+    .app-shell { display: none; min-height: 100vh; }
+    .app-shell.on { display: flex; }
+
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--sidebar-bg);
+      border-left: 1px solid rgba(255, 255, 255, 0.08);
+      position: fixed;
+      inset: 0 0 0 auto; /* Right side in RTL */
+      padding: 24px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 30;
+      overflow-y: auto;
+      color: var(--sidebar-text);
+    }
+    .side-brand {
+      display: flex; align-items: center; gap: 12px;
+      padding: 6px 8px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      margin-bottom: 20px;
+    }
+    .side-brand .logo {
+      width: 40px; height: 40px; border-radius: 12px;
+      background: var(--accent);
+      color: #fff; font-weight: 800; display: grid; place-items: center;
+      font-size: 1.15rem; flex-shrink: 0;
+      box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2);
+    }
+    .side-brand b { font-size: 1.05rem; font-weight: 800; color: #fff; }
+    .side-brand small { display: block; color: var(--sidebar-text); opacity: 0.7; font-size: .75rem; font-weight: 500; }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      color: var(--sidebar-text);
+      font-weight: 600;
+      font-size: .92rem;
+      cursor: pointer;
+      transition: var(--transition);
+      border: none; background: none; width: 100%; text-align: right;
+      font-family: inherit;
+    }
+    .nav-item:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+    .nav-item.active { background: var(--accent); color: #fff; }
+    .nav-item i { font-size: 1.15rem; width: 22px; text-align: center; }
+    .side-foot { margin-top: auto; padding-top: 18px; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+
+    .main {
+      flex: 1;
+      margin-right: var(--sidebar-w); /* push content to the left of the right sidebar */
+      margin-left: 0;
+      padding: 32px;
+      max-width: calc(100% - var(--sidebar-w));
+      transition: var(--transition);
+    }
+    .page-top {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; margin-bottom: 28px; flex-wrap: wrap;
+    }
+    .page-top h1 { margin: 0; font-size: 1.4rem; font-weight: 800; color: var(--text); }
+    .page-top .crumb { color: var(--muted); font-size: .8rem; margin-top: 4px; font-weight: 500; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+    }
+    .card:hover { box-shadow: var(--shadow-hover); }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      border: none; border-radius: 10px; padding: 10px 20px; cursor: pointer;
+      font-weight: 700; font-family: inherit; font-size: .88rem; transition: var(--transition);
+      display: inline-flex; align-items: center; gap: 8px; justify-content: center;
+    }
+    .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2); }
+    .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+    .btn-green { background: var(--green); color: #fff; }
+    .btn-green:hover { transform: translateY(-1px); }
+    .btn-danger { background: var(--red-soft); color: var(--red-text); border: 1px solid rgba(239, 68, 68, 0.1); }
+    .btn-danger:hover { background: var(--red); color: #fff; transform: translateY(-1px); }
+    .btn-ghost { background: var(--card); color: var(--text); border: 1px solid #cbd5e1; }
+    .btn-ghost:hover { background: #f8fafc; border-color: #94a3b8; }
+    .btn-sm { padding: 7px 12px; font-size: .8rem; border-radius: 8px; }
+    .btn-notif { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+    .btn-notif:hover { background: #2563eb; color: #fff; transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.25); }
+
+    /* ===== FORMS ===== */
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: .8rem; color: var(--text); margin-bottom: 6px; font-weight: 700; }
+    .field input, .field select, .field textarea {
+      width: 100%; padding: 11px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1;
+      background: var(--card); color: var(--text); font-family: inherit; font-size: .88rem;
+      transition: var(--transition);
+    }
+    .field input:focus, .field select:focus { outline: none; border-color: var(--accent); }
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .hint { font-size: .75rem; color: var(--muted); margin-top: 5px; font-weight: 500; }
+
+    /* ===== TABLE ===== */
+    .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; background: var(--card); }
+    th, td { text-align: right; padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: .88rem; }
+    th { color: var(--muted); font-size: .75rem; font-weight: 700; background: #f8fafc; }
+    tr:hover td { background: #f8fafc; }
+    .empty { text-align: center; padding: 48px 24px; color: var(--muted); font-size: .9rem; }
+    code {
+      background: #f1f5f9; padding: 3px 8px; border-radius: 8px;
+      font-size: .85em; direction: ltr; display: inline-block; color: var(--accent); font-weight: 700;
+    }
+
+    /* ===== BADGES ===== */
+    .badge {
+      display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 99px;
+      font-size: .75rem; font-weight: 700;
+    }
+    .badge-green { background: var(--green-soft); color: var(--green-text); }
+    .badge-red { background: var(--red-soft); color: var(--red-text); }
+    .badge-amber { background: var(--amber-soft); color: var(--amber-text); }
+    .badge-blue { background: var(--accent-soft); color: var(--accent); }
+    .muted { color: var(--muted); }
+
+    /* ===== STATS ===== */
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow);
+      transition: var(--transition);
+    }
+    .stat:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+    .stat .lbl { font-size: .8rem; color: var(--muted); font-weight: 600; }
+    .stat .num { font-size: 1.8rem; font-weight: 800; margin-top: 6px; }
+
+    /* ===== STORE DETAIL ===== */
+    .store-head {
+      display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .store-avatar {
+      width: 64px; height: 64px; border-radius: 16px;
+      background: linear-gradient(135deg, var(--accent), #f43f5e);
+      color: #fff; display: grid; place-items: center;
+      font-weight: 800; font-size: 1.6rem; flex-shrink: 0;
+      box-shadow: 0 8px 16px -4px rgba(239, 68, 68, 0.3);
+    }
+    .store-head h2 { margin: 0; font-size: 1.5rem; font-weight: 800; }
+    .store-head .sub { color: var(--muted); font-size: .88rem; margin-top: 6px; }
+    .kv {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .kv-item {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow);
+    }
+    .kv-item .k { font-size: .78rem; color: var(--muted); font-weight: 700; margin-bottom: 8px; }
+    .kv-item .v { font-size: .95rem; font-weight: 700; word-break: break-all; }
+    .kv-item .v.ltr { direction: ltr; text-align: left; }
+
+    /* ===== MODALS ===== */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px);
+      display: none; place-items: center; z-index: 100; padding: 20px;
+      transition: var(--transition);
+    }
+    .modal-backdrop.show { display: grid; }
+    .modal {
+      background: var(--card); border: 1px solid var(--border); border-radius: 20px;
+      max-width: 580px; width: 100%; padding: 32px; max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.15);
+      animation: modalSlide 0.25s ease-out;
+    }
+    @keyframes modalSlide {
+      from { transform: translateY(15px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .modal h3 { margin: 0 0 20px; font-size: 1.15rem; font-weight: 800; }
+    .modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1.3rem; transition: var(--transition); }
+    .modal-close:hover { color: var(--red); }
+
+    /* ===== TOAST ===== */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(120%);
+      background: var(--text); color: #fff;
+      padding: 14px 28px; border-radius: 12px; font-weight: 700; transition: var(--transition); z-index: 300;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      font-size: .9rem;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.err { background: var(--red); }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 860px) {
+      .sidebar {
+        width: 100%;
+        position: static;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 12px;
+        border-left: none;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .side-brand { border: none; margin: 0; padding: 0 6px; flex-shrink: 0; }
+      .side-brand small, .side-brand b { display: none; }
+      .nav-item { width: auto; padding: 10px 12px; }
+      .side-foot { margin: 0; padding: 0; border: none; margin-left: auto; margin-right: 0; }
+      .main { margin-right: 0; max-width: 100%; padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== LOGIN ===== -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-box">
+      <div class="logo">F7</div>
+      <h2>لوحة تحكم FAST7</h2>
+      <p class="muted">إدارة المتاجر المشتركة والاشتراكات</p>
+      <div class="field">
+        <input type="email" id="loginEmail" placeholder="بريد المشرف (Supabase Auth)" autocomplete="username" style="text-align:center">
+      </div>
+      <div class="field">
+        <input type="password" id="loginPass" placeholder="كلمة المرور" autocomplete="current-password" style="text-align:center">
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="doLogin()">دخول</button>
+    </div>
+  </div>
+
+  <!-- ===== APP SHELL ===== -->
+  <div id="app" class="app-shell">
+    <aside class="sidebar">
+      <div class="side-brand">
+        <span class="logo">F7</span>
+        <div>
+          <b>لوحة تحكم FAST7</b>
+          <small>إدارة المتاجر</small>
+        </div>
+      </div>
+
+      <button class="nav-item active" data-nav="dashboard" onclick="navTo('#/dashboard')">
+        <i class="fa-solid fa-chart-simple"></i> لوحة المعلومات
+      </button>
+      <button class="nav-item" data-nav="stores" onclick="navTo('#/stores')">
+        <i class="fa-solid fa-store"></i> المتاجر
+      </button>
+      <button class="nav-item" data-nav="codes" onclick="navTo('#/codes')">
+        <i class="fa-solid fa-ticket"></i> أكواد الاشتراك
+      </button>
+      <button class="nav-item" data-nav="subs" onclick="navTo('#/subs')">
+        <i class="fa-solid fa-credit-card"></i> الاشتراكات
+      </button>
+      <button class="nav-item" data-nav="notifs" onclick="navTo('#/notifs')">
+        <i class="fa-solid fa-bell"></i> الإشعارات
+      </button>
+
+      <div class="side-foot">
+        <div class="row" style="justify-content:space-between;padding:0 6px">
+          <span class="muted" style="font-size:.75rem" id="syncStatus">...</span>
+          <button class="btn btn-ghost btn-sm" onclick="logout()">خروج</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main" id="mainContent">
+      <!-- ROUTED CONTENT RENDERS HERE -->
+    </main>
+  </div>
+
+  <!-- ===== STORE MODAL ===== -->
+  <div class="modal-backdrop" id="storeModal">
+    <div class="modal">
+      <div class="row" style="justify-content:space-between">
+        <h3 id="storeModalTitle">إضافة متجر جديد</h3>
+        <button class="modal-close" onclick="closeStoreModal()">✕</button>
+      </div>
+      <div class="field">
+        <label>اسم المتجر *</label>
+        <input id="sName" placeholder="مثال: متجر العطور">
+      </div>
+      <div class="field">
+        <label>المسار (slug) — يُنشر على /<code>&lt;slug&gt;</code>/index.html *</label>
+        <input id="sSlug" placeholder="مثال: perfumes" dir="ltr" style="text-align:left">
+        <div class="hint">فريد لكل متجر. يُستخدم في رابط المتجر واستخراج store_id.</div>
+      </div>
+      <div class="row" style="gap:10px">
+        <div class="field" style="flex:1">
+          <label>اسم المالك</label>
+          <input id="sOwnerName" placeholder="اسم صاحب المتجر">
+        </div>
+        <div class="field" style="flex:1">
+          <label>هاتف المالك</label>
+          <input id="sOwnerPhone" placeholder="رقم الهاتف">
+        </div>
+      </div>
+      <div class="field">
+        <label>بريد المالك</label>
+        <input id="sOwnerEmail" placeholder="example@email.com" dir="ltr" style="text-align:left">
+      </div>
+
+      <div class="field">
+        <label style="color:var(--accent)">كود لوحة التحكم للمتجر (اختياري — محفوظ عند الشركة فقط)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="sAdminCode" placeholder="اتركه فارغاً لتعطيل الدخول المخصص" dir="ltr" style="text-align:left;flex:1">
+          <button type="button" class="btn btn-ghost" onclick="generateAdminCode()" title="توليد كود عشوائي آمن">🎲 توليد</button>
+        </div>
+        <div class="hint">كود خاص يفتح لوحة إدارة هذا المتجر. الكود لا يظهر في سكربتات المتجر؛ يُتحقق منه عبر خادم الشركة. اتركه فارغاً ليبقى سلوك المتجر كما هو.</div>
+      </div>
+
+      <div class="field">
+        <label style="color:var(--accent)">بيانات Supabase الخاص بهذا المتجر (معزول تماماً)</label>
+        <div class="hint" style="margin-bottom:10px">أدخل بيانات مشروع Supabase المستقل لهذا المتجر — لا تختلط بياناته مع أي متجر آخر.</div>
+        <input id="sSupabaseUrl" placeholder="https://xxxx.supabase.co" dir="ltr" style="text-align:left;margin-bottom:8px">
+        <input id="sAnonKey" placeholder="anon key" dir="ltr" style="text-align:left;margin-bottom:8px">
+        <input id="sWriteToken" placeholder="write token (رمز الكتابة)" dir="ltr" style="text-align:left">
+      </div>
+
+      <div class="field">
+        <label>الحالة</label>
+        <select id="sStatus">
+          <option value="active">نشط</option>
+          <option value="pending">قيد الإعداد</option>
+          <option value="suspended">موقوف</option>
+        </select>
+      </div>
+
+      <div class="row" style="justify-content:flex-end;margin-top:8px">
+        <button class="btn btn-ghost" onclick="closeStoreModal()">إلغاء</button>
+        <button class="btn btn-primary" onclick="saveStore()">حفظ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CODE MODAL ===== -->
+  <div class="modal-backdrop" id="codeModal">
+    <div class="modal">
+      <div class="row" style="justify-content:space-between">
+        <h3>إصدار كود اشتراك / دفع</h3>
+        <button class="modal-close" onclick="closeCodeModal()">✕</button>
+      </div>
+      <div class="field">
+        <label>الكود *</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="cCode" placeholder="مثال: F7-2026-A1B2C3" dir="ltr" style="text-align:left;flex:1">
+          <button type="button" class="btn btn-ghost" onclick="generateSubCode()" title="توليد كود عشوائي">🎲 توليد</button>
+        </div>
+        <div class="hint">اتركه فارغاً لتوليد كود تلقائياً.</div>
+      </div>
+      <div class="row" style="gap:10px">
+        <div class="field" style="flex:1">
+          <label>النوع</label>
+          <select id="cType" onchange="onCodeTypeChange()">
+            <option value="subscription">تفعيل اشتراك</option>
+            <option value="fee">دفع رسوم</option>
+            <option value="credit">رصيد</option>
+          </select>
+        </div>
+        <div class="field" style="flex:1" id="cPlanField">
+          <label>الخطة</label>
+          <select id="cPlan">
+            <option value="free">مجانية</option>
+            <option value="monthly">شهرية</option>
+            <option value="annual">سنوية VIP</option>
+          </select>
+        </div>
+      </div>
+      <div class="row" style="gap:10px">
+        <div class="field" style="flex:1" id="cAmountField">
+          <label>المبلغ</label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input id="cAmount" type="number" placeholder="0" style="flex:1">
+            <button type="button" class="btn btn-ghost btn-sm" id="fillFromBalanceBtn" onclick="fillAmountFromBalance()" title="تعبئة من رصيد المتجر" style="display:none;white-space:nowrap;font-size:.72rem">💰 من الرصيد</button>
+          </div>
+          <div id="cStoreBalanceHint" style="font-size:.7rem;color:#10b981;margin-top:4px;display:none"></div>
+        </div>
+        <div class="field" style="flex:1">
+          <label>للمتجر</label>
+          <select id="cStore" onchange="onStoreSelectChange()"></select>
+        </div>
+      </div>
+      <div class="row" style="justify-content:flex-end;margin-top:8px">
+        <button class="btn btn-ghost" onclick="closeCodeModal()">إلغاء</button>
+        <button class="btn btn-primary" onclick="saveCode()">إصدار</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== NOTIFICATION MODAL ===== -->
+  <div class="modal-backdrop" id="notifModal">
+    <div class="modal" style="max-width:480px">
+      <div class="row" style="justify-content:space-between;margin-bottom:4px">
+        <div>
+          <h3 id="notifModalTitle" style="margin:0;font-size:1rem">إرسال إشعار للمتجر</h3>
+          <p style="margin:4px 0 0;font-size:.75rem;color:var(--muted)">سيظهر الإشعار فوراً في لوحة تحكم المتجر</p>
+        </div>
+        <button class="modal-close" onclick="closeNotifModal()">✕</button>
+      </div>
+
+      <!-- Type -->
+      <div class="field" style="margin-top:14px">
+        <label>نوع الإشعار</label>
+        <select id="nType" onchange="onNotifTypeChange()">
+          <option value="general">📢 عام</option>
+          <option value="payment">⚠️ مالي / مستحقات</option>
+          <option value="post">📰 مقال / منشور</option>
+          <option value="update">🔄 تحديث</option>
+          <option value="offer">🏷️ عرض</option>
+          <option value="marketing">📣 تسويق</option>
+          <option value="welcome">👋 ترحيب</option>
+          <option value="warning">🚨 تحذير</option>
+        </select>
+      </div>
+
+      <!-- Quick Templates -->
+      <div id="notifTemplatesBar" style="margin:8px 0 4px;display:none">
+        <div style="font-size:.7rem;color:var(--muted);font-weight:700;margin-bottom:6px">⚡ قوالب جاهزة</div>
+        <div id="notifTemplatesBtns" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+      </div>
+
+      <!-- Title -->
+      <div class="field">
+        <label>عنوان الإشعار *</label>
+        <input id="nTitle" placeholder="مثال: تحديث هام لمتجرك" maxlength="100">
+      </div>
+
+      <!-- Message -->
+      <div class="field">
+        <label>نص الإشعار *</label>
+        <textarea id="nMessage" placeholder="اكتب نص الإشعار هنا..." rows="3" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:.85rem;resize:vertical;outline:none;background:var(--bg);color:var(--text);transition:border .2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+      </div>
+
+      <!-- Optional image + link -->
+      <div class="row" style="gap:10px">
+        <div class="field" style="flex:1">
+          <label style="font-size:.75rem">رابط صورة (اختياري)</label>
+          <input id="nImage" placeholder="https://..." dir="ltr" style="text-align:left;font-size:.78rem">
+        </div>
+        <div class="field" style="flex:1">
+          <label style="font-size:.75rem">رابط إضافي (اختياري)</label>
+          <input id="nLink" placeholder="https://..." dir="ltr" style="text-align:left;font-size:.78rem">
+        </div>
+      </div>
+
+      <!-- Preview strip -->
+      <div id="notifPreview" style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px;padding:10px 12px;margin:6px 0 14px;display:flex;align-items:flex-start;gap:10px">
+        <i class="fa-solid fa-bell" style="color:#2563eb;margin-top:2px"></i>
+        <div style="flex:1;min-width:0">
+          <div id="previewTitle" style="font-weight:800;font-size:.78rem;color:#1e3a8a">العنوان يظهر هنا</div>
+          <div id="previewMsg" style="font-size:.68rem;color:#1d4ed8;margin-top:2px">نص الإشعار...</div>
+        </div>
+      </div>
+
+      <div class="row" style="justify-content:flex-end;gap:10px">
+        <button class="btn btn-ghost" onclick="closeNotifModal()">إلغاء</button>
+        <button class="btn btn-primary" id="sendNotifBtn" onclick="sendNotifToStore()"><i class="fa-solid fa-paper-plane"></i> إرسال</button>
+      </div>
+    </div>
+  <!-- ===== BROADCAST MODAL ===== -->
+  <div class="modal-backdrop" id="broadcastModal">
+    <div class="modal" style="max-width:520px">
+      <div class="row" style="justify-content:space-between;margin-bottom:4px">
+        <div>
+          <h3 style="margin:0;font-size:1rem;display:flex;align-items:center;gap:8px">
+            <i class="fa-solid fa-broadcast-tower" style="color:#2563eb"></i>
+            إشعار لكل المتاجر
+          </h3>
+          <p id="bEligibleInfo" style="margin:5px 0 0;font-size:.75rem;color:var(--muted)">...</p>
+        </div>
+        <button class="modal-close" onclick="closeBroadcastModal()">✕</button>
+      </div>
+
+      <!-- Warning banner -->
+      <div style="background:#fef3c7;border:1.5px solid #fde68a;border-radius:10px;padding:10px 14px;margin:14px 0;display:flex;gap:10px;align-items:flex-start">
+        <i class="fa-solid fa-triangle-exclamation" style="color:#d97706;margin-top:2px;flex-shrink:0"></i>
+        <div style="font-size:.78rem;color:#92400e;line-height:1.6">
+          سيتم إرسال هذا الإشعار لـ<strong>جميع</strong> المتاجر المتصلة بـ Supabase.
+          سيظهر فوراً في لوحة تحكم كل متجر. تأكد من المحتوى قبل الإرسال.
+        </div>
+      </div>
+
+      <!-- Type -->
+      <div class="field">
+        <label>نوع الإشعار</label>
+        <select id="bType">
+          <option value="general">📢 عام</option>
+          <option value="payment">⚠️ مالي / مستحقات</option>
+          <option value="post">📰 مقال / منشور</option>
+          <option value="update">🔄 تحديث</option>
+          <option value="offer">🏷️ عرض</option>
+          <option value="marketing">📣 تسويق</option>
+          <option value="welcome">👋 ترحيب</option>
+          <option value="warning">🚨 تحذير</option>
+        </select>
+      </div>
+
+      <!-- Title -->
+      <div class="field">
+        <label>عنوان الإشعار *</label>
+        <input id="bTitle" placeholder="مثال: تحديث هام لجميع المتاجر" maxlength="100">
+      </div>
+
+      <!-- Message -->
+      <div class="field">
+        <label>نص الإشعار *</label>
+        <textarea id="bMessage" placeholder="اكتب نص الإشعار..." rows="3" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:.85rem;resize:vertical;outline:none;background:var(--bg);color:var(--text);transition:border .2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+      </div>
+
+      <!-- Optional -->
+      <div class="row" style="gap:10px">
+        <div class="field" style="flex:1">
+          <label style="font-size:.75rem">رابط صورة (اختياري)</label>
+          <input id="bImage" placeholder="https://..." dir="ltr" style="text-align:left;font-size:.78rem">
+        </div>
+        <div class="field" style="flex:1">
+          <label style="font-size:.75rem">رابط إضافي (اختياري)</label>
+          <input id="bLink" placeholder="https://..." dir="ltr" style="text-align:left;font-size:.78rem">
+        </div>
+      </div>
+
+      <!-- Progress section (shown after send) -->
+      <div id="broadcastProgress" style="display:none;margin:10px 0 6px">
+        <div style="font-size:.78rem;font-weight:800;color:var(--text);margin-bottom:6px">
+          <i class="fa-solid fa-satellite-dish" style="color:#2563eb"></i>
+          حالة الإرسال:
+        </div>
+        <div id="broadcastProgressList" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;padding:6px"></div>
+        <div id="broadcastSummary" style="display:none;margin-top:8px;font-size:.82rem;text-align:center"></div>
+      </div>
+
+      <div class="row" style="justify-content:flex-end;gap:10px;margin-top:8px">
+        <button class="btn btn-ghost" onclick="closeBroadcastModal()">إغلاق</button>
+        <button class="btn btn-primary" id="sendBroadcastBtn" onclick="broadcastNotifToAll()">
+          <i class="fa-solid fa-broadcast-tower"></i> إرسال للكل
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+
+
+  <script src="js/config.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    // Live preview for notification modal
+    document.addEventListener('DOMContentLoaded', function() {
+      var nTitle = document.getElementById('nTitle');
+      var nMessage = document.getElementById('nMessage');
+      var nType = document.getElementById('nType');
+      var prevTitle = document.getElementById('previewTitle');
+      var prevMsg = document.getElementById('previewMsg');
+      var notifPreview = document.getElementById('notifPreview');
+
+      var typeColors = {
+        general:   { bg:'#eff6ff', bd:'#bfdbfe', ic:'#2563eb', txt:'#1e3a8a', sub:'#1d4ed8', icon:'fa-bullhorn' },
+        payment:   { bg:'#fef2f2', bd:'#fecaca', ic:'#dc2626', txt:'#991b1b', sub:'#b91c1c', icon:'fa-triangle-exclamation' },
+        post:      { bg:'#ecfdf5', bd:'#a7f3d0', ic:'#7c3aed', txt:'#065f46', sub:'#047857', icon:'fa-newspaper' },
+        update:    { bg:'#e0f2fe', bd:'#bae6fd', ic:'#0891b2', txt:'#075985', sub:'#0369a1', icon:'fa-rotate' },
+        offer:     { bg:'#fdf2f8', bd:'#fbcfe8', ic:'#db2777', txt:'#831843', sub:'#9d174d', icon:'fa-tag' },
+        marketing: { bg:'#fff7ed', bd:'#ffedd5', ic:'#ea580c', txt:'#7c2d12', sub:'#9a3412', icon:'fa-bullhorn' },
+        welcome:   { bg:'#ecfdf5', bd:'#a7f3d0', ic:'#059669', txt:'#065f46', sub:'#047857', icon:'fa-hand-wave' },
+        warning:   { bg:'#fef2f2', bd:'#fecaca', ic:'#dc2626', txt:'#991b1b', sub:'#b91c1c', icon:'fa-triangle-exclamation' }
+      };
+
+      function updatePreview() {
+        var t = typeColors[nType.value] || typeColors.general;
+        var titleTxt = nTitle.value.trim() || 'العنوان يظهر هنا';
+        var msgTxt = nMessage.value.trim() || 'نص الإشعار...';
+        notifPreview.style.background = t.bg;
+        notifPreview.style.borderColor = t.bd;
+        notifPreview.querySelector('i').className = 'fa-solid ' + t.icon;
+        notifPreview.querySelector('i').style.color = t.ic;
+        prevTitle.textContent = titleTxt;
+        prevTitle.style.color = t.txt;
+        prevMsg.textContent = msgTxt;
+        prevMsg.style.color = t.sub;
+      }
+
+      if (nTitle) nTitle.addEventListener('input', updatePreview);
+      if (nMessage) nMessage.addEventListener('input', updatePreview);
+      if (nType) nType.addEventListener('change', updatePreview);
+    });
+  </script>
+</body>
+</html>
+
