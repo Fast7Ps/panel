@@ -299,8 +299,8 @@
     const sub = latestSub(s.store_id);
     const initial = (s.name || '?').trim().charAt(0).toUpperCase();
     const storeUrl = s.path_slug === 'default' 
-      ? 'https://fast7ps.github.io/' 
-      : 'https://fast7ps.github.io/stores/' + esc(s.path_slug) + '/';
+      ? 'https://fast7ps.github.io/store/default/' 
+      : 'https://fast7ps.github.io/' + esc(s.path_slug) + '/default/';
       
     mc.innerHTML =
       '<div class="page-top"><div><a href="#/stores" class="muted" style="font-size:.8rem;font-weight:700">← المتاجر</a>' +
@@ -342,6 +342,7 @@
 
       '<div class="card"><h3 style="margin:0 0 14px;font-size:.95rem">اتصال Supabase</h3>' +
       '<div class="kv">' +
+      kvi('حالة الاتصال', '<span id="detail-conn-' + esc(s.store_id) + '"><span class="badge badge-amber"><i class="fa-solid fa-spinner fa-spin"></i> جارٍ فحص الاتصال...</span></span>') +
       kvi('URL', esc(s.supabase_url || '—'), true) +
       kvi('Anon Key', esc(s.anon_key || '—'), true) +
       kvi('Write Token', esc(s.write_token || '—'), true) +
@@ -358,6 +359,20 @@
           el.innerHTML = '<img src="' + logoUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:15px">';
         }
       }).catch(function() {});
+      
+      // Test Connection
+      const connEl = document.getElementById('detail-conn-' + s.store_id);
+      fetch(s.supabase_url.replace(/\/+$/, '') + '/rest/v1/store_data?limit=1', {
+        headers: { 'apikey': s.anon_key, 'Authorization': 'Bearer ' + s.anon_key }
+      }).then(function(res) {
+        if (res.ok) {
+          connEl.innerHTML = '<span class="badge badge-green"><i class="fa-solid fa-circle-check"></i> متصل وقابل للقراءة</span>';
+        } else {
+          connEl.innerHTML = '<span class="badge badge-red"><i class="fa-solid fa-circle-xmark"></i> خطأ: ' + res.status + '</span>';
+        }
+      }).catch(function() {
+        connEl.innerHTML = '<span class="badge badge-red"><i class="fa-solid fa-circle-xmark"></i> فشل الاتصال</span>';
+      });
     }
 
     if (isFree && s.supabase_url && s.anon_key) {
